@@ -62,6 +62,7 @@ func (s *JobService) FetchAndStoreJobs(ctx context.Context) error {
 		// Insert the job into the database
 		_, err := s.Db.ExecContext(ctx, "INSERT INTO public.job (title, description, company, location) VALUES ($1, $2, $3, $4)", job.Title, job.Description, job.Company, job.Location)
 		if err != nil {
+			return err
 			// Log or handle the error as needed
 		}
 	}

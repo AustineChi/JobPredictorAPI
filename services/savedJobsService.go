@@ -5,11 +5,11 @@ import (
     "database/sql"
     "errors"
     "JobPredictorAPI/models"
-    "JobPredictorAPI/utils"
 )
 
 type SavedJobsService struct {
     db *sql.DB
+    jb JobService 
 }
 
 // NewSavedJobsService creates a new instance of SavedJobsService
@@ -50,7 +50,7 @@ func (s *SavedJobsService) GetSavedJobs(ctx context.Context, userID int) ([]mode
             return nil, err
         }
 
-        job, err := utils.GetJobByID(s.db, jobID)
+        job, err := s.jb.GetJobByID(ctx, jobID)
         if err != nil {
             return nil, err
         }
