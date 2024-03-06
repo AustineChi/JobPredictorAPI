@@ -1,21 +1,24 @@
 package main
 
 import (
-    "database/sql"
-    "log"
-    "JobPredictorAPI/controllers"
-    "JobPredictorAPI/router"
-    "JobPredictorAPI/services"
-    "JobPredictorAPI/config"
-    _ "github.com/lib/pq" // PostgreSQL driver
+	"JobPredictorAPI/config"
+	"JobPredictorAPI/controllers"
+	"JobPredictorAPI/router"
+	"JobPredictorAPI/services"
+	"database/sql"
+	"log"
+	"os"
+
+	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
 func main() {
     // PostgreSQL connection string
-    const connStr = "postgresql://austine:wik@localhost/job_search_db"
+    //const connStr = "postgresql://austine:wik@localhost/job_search_db"
 
+    dsnString := os.Getenv("DSN")
     // Open a DB connection
-    db, err := sql.Open("postgres", connStr)
+    db, err := sql.Open("postgres", dsnString)
     if err != nil {
         log.Fatalf("Error opening database: %v", err)
     }
