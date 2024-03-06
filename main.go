@@ -1,7 +1,6 @@
 package main
 
 import (
-	"JobPredictorAPI/config"
 	"JobPredictorAPI/controllers"
 	"JobPredictorAPI/router"
 	"JobPredictorAPI/services"

@@ -17,7 +17,7 @@ func NewUserService(db *sql.DB) *UserService {
 // CreateUser creates a new user in the database
 func (s *UserService) CreateUser(ctx context.Context, user *models.User) error {
     query := "INSERT INTO public.user (name, email, password, job_preferences) VALUES ($1, $2, $3, $4)"
-    _, err := s.Db.ExecContext(ctx, query, user.Name, user.Email, user.Password, user.JobPreferences)
+    _, err := s.Db.ExecContext(ctx, query, user.Name, user.Email, user.PasswordHash, user.JobPreferences)
     return err
 }
 
