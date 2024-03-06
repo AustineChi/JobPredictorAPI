@@ -9,7 +9,7 @@ func SetupRouter(
     userController *controllers.UserController,
     jobController *controllers.JobController,
     savedJobsController *controllers.SavedJobsController,
-    recommendationController *controllers.RecommendationController,
+    //recommendationController *controllers.RecommendationController,
     notificationController *controllers.NotificationController,
     interactionController *controllers.InteractionController,
 ) *gin.Engine {

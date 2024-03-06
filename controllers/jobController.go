@@ -96,11 +96,13 @@ func (jc *JobController) GetAllJobs(c *gin.Context) {
 
 // GetJobRecommendations - Retrieves job recommendations for a user
 func (jc *JobController) GetJobRecommendations(c *gin.Context) {
-	userID, err := strconv.Atoi(c.Param("userID"))
+	userIDInt, err := strconv.Atoi(c.Param("userID"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
+    //convert back to string
+    userID := strconv.Itoa(userIDInt)
 	jobs, err := jc.JobService.GetJobRecommendations(c, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

@@ -1,11 +1,12 @@
 package controllers
 
 import (
-    "net/http"
-    "strconv"
-    "JobPredictorAPI/models"
-    "JobPredictorAPI/services"
-    "github.com/gin-gonic/gin"
+	"JobPredictorAPI/models"
+	"JobPredictorAPI/services"
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 // InteractionController struct
