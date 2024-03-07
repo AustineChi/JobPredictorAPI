@@ -49,7 +49,7 @@ func (s *SavedJobsService) GetSavedJobs(ctx context.Context, userID int) ([]mode
         if err := rows.Scan(&jobID); err != nil {
             return nil, err
         }
-
+        //query the job table to fetch the job ID
         job, err := s.jb.GetJobByID(ctx, jobID)
         if err != nil {
             return nil, err
