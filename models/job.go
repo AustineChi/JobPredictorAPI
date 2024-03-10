@@ -1,7 +1,8 @@
 package models
 
 import (
-    "math/big"
+	"database/sql/driver"
+	"math/big"
 )
 
 // Job represents a job listing in the job search app
@@ -12,7 +13,26 @@ type Job struct {
 	Company        string  `gorm:"column:company" json:"company"`
 	Location       string  `gorm:"column:location" json:"location"`
 	SkillsRequired string  `gorm:"column:skills_required" json:"skillsRequired"`
-	Salary         big.Int `gorm:"column:salary" json:"salary"`
+	Salary         BigInt `gorm:"column:salary" json:"salary"`
 	EmploymentType string  `gorm:"column:employment_type" json:"employmentType"`
 }
 
+//Implement a Valuer and Scanner interface for SQL to handle BigInt 
+type BigInt struct {
+	big.Int
+}
+
+// Value converts BigInt to a database value
+func (bi BigInt)Value()(driver.Value, error){
+	return bi.String(), nil
+}
+
+// Scan converts a database value to BigInt
+func (bi *BigInt) Scan(value interface{}) error {
+    var s string
+    if value != nil {
+        s = string(value.([]byte))
+    }
+    bi.SetString(s, 10)
+    return nil
+}

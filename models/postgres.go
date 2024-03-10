@@ -15,18 +15,19 @@ func ConnectToDB(dsn string) (*gorm.DB, error) {
 	}
 	err = db.AutoMigrate(&User{}, &SavedJob{}, &JobRecommendation{}, &Notification{}, &Job{}, &Interaction{})
 	if err != nil {
-		log.Println("Error in Migration", err)
+		log.Fatal("Error in Migration", err)
 	}
+	log.Println("Migrations Successful")
 	//verifies if a connection to the database is still alive, establishing a connection if necessary.
 	sqlDB, err := db.DB()
 	if err != nil {
-		log.Println("error in getting sql")
+		log.Println("error in getting sql connection")
 	}
-
 	err = sqlDB.Ping()
 	if err != nil {
-		log.Println("Error in connection", err)
+		log.Fatal("Error in connection", err)
 		return nil, err
 	}
+	log.Println("connected to DB")
 	return db, nil
 }
