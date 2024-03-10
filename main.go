@@ -2,6 +2,7 @@ package main
 
 import (
 	"JobPredictorAPI/controllers"
+	"JobPredictorAPI/models"
 	"JobPredictorAPI/router"
 	"JobPredictorAPI/services"
 
@@ -15,7 +16,7 @@ func main() {
 	Local := "postgresql://postgres:philippians@localhost:5432/postgres?sslmode=disable"
 	//dsnString := os.Getenv("Local")
 	// Open a DB connection
-	db, err := services.ConnectToDB(Local)
+	db, err := models.ConnectToDB(Local)
 	if err != nil {
 		return
 	}
