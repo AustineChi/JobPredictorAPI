@@ -4,12 +4,14 @@ import (
 	"JobPredictorAPI/models"
 	"context"
 	"errors"
+	"log"
 
 	"gorm.io/gorm"
 )
 
 type UserService struct {
 	Db *gorm.DB
+	M  models.User
 }
 
 func NewUserService(db *gorm.DB) *UserService {
@@ -18,21 +20,37 @@ func NewUserService(db *gorm.DB) *UserService {
 
 // CreateUser creates a new user in the database
 func (s *UserService) CreateUser(ctx context.Context, user *models.User) error {
-	query := "INSERT INTO public.user (name, email, password, job_preferences) VALUES ($1, $2, $3, $4)"
-	result := s.Db.Exec(query, user.Name, user.Email, user.PasswordHash, user.JobPreferences).WithContext(ctx)
-	if result.Error != nil {
-		return result.Error
+	hashpassword, err := s.M.SetPassword(user.PasswordHash)
+	if err != nil {
+		return err
 	}
-	// Check affected rows if needed
-	if result.RowsAffected == 0 {
-		return errors.New("no rows affected")
+	newUser := &models.User{
+		Name:           user.Name,
+		Email:          user.Email,
+		PasswordHash:   string(hashpassword),
+		JobPreferences: user.JobPreferences,
+	}
+	err = s.Db.Create(newUser).WithContext(ctx).Error
+	if err != nil {
+		log.Println("Unable to create user", err)
+		return err
 	}
 	return nil
 }
 
+func (s *UserService) GetEmail(ctx context.Context, email string) (*models.User, error) {
+	var user models.User
+	err := s.Db.Where("email=?", email).WithContext(ctx).First(&user).Error
+	if err != nil {
+		log.Println("unable to fetch email:", err)
+		return nil, err
+	}
+	return &user, nil
+}
+
 // GetUserByID retrieves a user by their ID
 func (s *UserService) GetUserByID(ctx context.Context, userID int) (*models.User, error) {
-	query := "SELECT user_id, name, email, job_preferences FROM public.user WHERE user_id = $1"
+	query := "SELECT user_id, name, email, job_preferences FROM public.users WHERE user_id = $1"
 	row := s.Db.Exec(query, userID).WithContext(ctx)
 
 	var user models.User
@@ -49,7 +67,7 @@ func (s *UserService) GetUserByID(ctx context.Context, userID int) (*models.User
 
 // UpdateUser updates a user's details in the database
 func (s *UserService) UpdateUser(ctx context.Context, user *models.User) error {
-	query := "UPDATE public.user SET name = $1, email = $2, job_preferences = $3 WHERE user_id = $4"
+	query := "UPDATE public.users SET name = $1, email = $2, job_preferences = $3 WHERE user_id = $4"
 	result := s.Db.Exec(query, user.Name, user.Email, user.JobPreferences, user.UserID).WithContext(ctx)
 	if result.Error != nil {
 		return result.Error
@@ -63,7 +81,7 @@ func (s *UserService) UpdateUser(ctx context.Context, user *models.User) error {
 
 // DeleteUser removes a user from the database
 func (s *UserService) DeleteUser(ctx context.Context, userID int) error {
-	query := "DELETE FROM public.user WHERE user_id = $1"
+	query := "DELETE FROM public.users WHERE user_id = $1"
 	result := s.Db.Exec(query, userID).WithContext(ctx)
 	if result.Error != nil {
 		return result.Error
