@@ -4,7 +4,6 @@ import (
 	"JobPredictorAPI/controllers"
 	"JobPredictorAPI/router"
 	"JobPredictorAPI/services"
-	"os"
 
 	_ "github.com/lib/pq" // PostgreSQL driver
 )
@@ -13,9 +12,10 @@ func main() {
 	// PostgreSQL connection string
 	//const connStr = "postgresql://austine:wik@localhost/job_search_db"
 
-	dsnString := os.Getenv("DSN")
+	Local := "postgresql://postgres:philippians@localhost:5432/postgres?sslmode=disable"
+	//dsnString := os.Getenv("Local")
 	// Open a DB connection
-	db, err := services.ConnectToDB(dsnString)
+	db, err := services.ConnectToDB(Local)
 	if err != nil {
 		return
 	}

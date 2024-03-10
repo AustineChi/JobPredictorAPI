@@ -4,17 +4,17 @@ import (
 	"JobPredictorAPI/models"
 	"JobPredictorAPI/utils" // Ensure this path correctly points to your utils package
 	"context"
-	"database/sql"
 	"encoding/json"
+	"gorm.io/gorm"
 	"io"
 	"net/http"
 )
 
 type JobService struct {
-	Db *sql.DB
+	Db *gorm.DB
 }
 
-func NewJobService(db *sql.DB) *JobService {
+func NewJobService(db *gorm.DB) *JobService {
 	return &JobService{Db: db}
 }
 

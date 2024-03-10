@@ -2,15 +2,15 @@ package services
 
 import (
     "context"
-    "database/sql"
+    "gorm.io/gorm"
     "JobPredictorAPI/models"
 )
 
 type UserService struct {
-    Db *sql.DB
+    Db *gorm.DB
 }
 
-func NewUserService(db *sql.DB) *UserService {
+func NewUserService(db *gorm.DB) *UserService {
     return &UserService{Db: db}
 }
 

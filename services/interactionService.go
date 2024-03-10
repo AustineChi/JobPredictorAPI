@@ -3,14 +3,14 @@ package services
 import (
 	"JobPredictorAPI/models"
 	"context"
-	"database/sql"
+	"gorm.io/gorm"
 )
 
 type InteractionService struct {
-	Db *sql.DB
+	Db *gorm.DB
 }
 
-func NewInteractionService(db *sql.DB) *InteractionService {
+func NewInteractionService(db *gorm.DB) *InteractionService {
 	return &InteractionService{Db: db}
 }
 func (s *InteractionService) CreateInteraction(ctx context.Context, interaction *models.Interaction) error {

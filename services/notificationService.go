@@ -2,15 +2,15 @@ package services
 
 import (
     "context"
-    "database/sql"
+    "gorm.io/gorm"
     "JobPredictorAPI/models"
 )
 
 type NotificationService struct {
-    Db *sql.DB
+    Db *gorm.DB
 }
 
-func NewNotificationService(db *sql.DB) *NotificationService {
+func NewNotificationService(db *gorm.DB) *NotificationService {
     return &NotificationService{Db: db}
 }
 
