@@ -5,7 +5,10 @@ import (
 	"JobPredictorAPI/models"
 	"JobPredictorAPI/router"
 	"JobPredictorAPI/services"
+	"log"
+	"os"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
@@ -13,10 +16,15 @@ func main() {
 	// PostgreSQL connection string
 	//const connStr = "postgresql://austine:wik@localhost/job_search_db"
 
-	Local := "postgresql://postgres:philippians@localhost:5432/postgres?sslmode=disable"
-	//dsnString := os.Getenv("Local")
+	// Load environment variables from .env file
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	dsnString := os.Getenv("DSN")
+	log.Println(dsnString)
 	// Open a DB connection
-	db, err := models.ConnectToDB(Local)
+	db, err := models.ConnectToDB(dsnString)
 	if err != nil {
 		return
 	}
