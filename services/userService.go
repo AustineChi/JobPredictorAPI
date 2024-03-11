@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -19,23 +20,25 @@ func NewUserService(db *gorm.DB) *UserService {
 }
 
 // CreateUser creates a new user in the database
-func (s *UserService) CreateUser(ctx context.Context, user *models.User) error {
+func (s *UserService) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
 	hashpassword, err := s.M.SetPassword(user.PasswordHash)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	newUser := &models.User{
 		Name:           user.Name,
 		Email:          user.Email,
 		PasswordHash:   string(hashpassword),
 		JobPreferences: user.JobPreferences,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}
 	err = s.Db.Create(newUser).WithContext(ctx).Error
 	if err != nil {
 		log.Println("Unable to create user", err)
-		return err
+		return nil, err
 	}
-	return nil
+	return newUser, nil
 }
 
 func (s *UserService) GetEmail(ctx context.Context, email string) (*models.User, error) {

@@ -30,13 +30,16 @@ func (uc *UserController) Register(c *gin.Context) {
 		return
 	}
 	//UserService.CreateUser handles the creation logic
-	err := uc.UserService.CreateUser(c, &newUser)
+	user, err := uc.UserService.CreateUser(c, &newUser)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully"})
-	log.Println("User resistered successfully")
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "User registered successfully",
+		"details": user,
+	})
+	log.Println("User registered successfully")
 }
 
 // Login - Handles user login

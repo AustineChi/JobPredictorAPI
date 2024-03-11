@@ -3,17 +3,20 @@ package models
 import (
 	"errors"
 	"log"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 // User represents a user of the job search app
 type User struct {
-	UserID         int    `gorm:"column:user_id;primary_key" json:"userId"`
-	Name           string `gorm:"column:name" json:"name"`
-	Email          string `gorm:"column:email" json:"email"`
-	PasswordHash   string `gorm:"column:password" json:"password"`
-	JobPreferences string `gorm:"column:job_preferences" json:"jobPreferences"`
+	UserID         int       `gorm:"column:user_id;primary_key" json:"userId"`
+	Name           string    `gorm:"column:name" json:"name"`
+	Email          string    `gorm:"uniqueIndex;column:email" json:"email"`
+	PasswordHash   string    `gorm:"column:password" json:"password"`
+	JobPreferences string    `gorm:"column:job_preferences" json:"jobPreferences"`
+	CreatedAt      time.Time `gorm:"column:created_at" json:"created_at"`
+	UpdatedAt      time.Time `gorm:"column:updated_at" json:"updated_at"`
 }
 
 // SetPassword sets a hashed password for a user
