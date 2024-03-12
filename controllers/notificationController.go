@@ -1,11 +1,13 @@
 package controllers
 
 import (
-    "net/http"
-    "strconv"
-    "JobPredictorAPI/models"
-    "JobPredictorAPI/services"
-    "github.com/gin-gonic/gin"
+	"JobPredictorAPI/models"
+	"JobPredictorAPI/services"
+	"log"
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 // NotificationController struct
@@ -24,12 +26,14 @@ func NewNotificationController(ns *services.NotificationService) *NotificationCo
 func (nc *NotificationController) GetNotifications(c *gin.Context) {
     userID, err := strconv.Atoi(c.Param("userID"))
     if err != nil {
+        log.Println("invalid user ID:", err)
         c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
         return
     }
 
     notifications, err := nc.NotificationService.GetNotificationsByUserID(c, userID)
     if err != nil {
+        log.Println("unable to get user notification", err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }
@@ -41,12 +45,14 @@ func (nc *NotificationController) GetNotifications(c *gin.Context) {
 func (nc *NotificationController) CreateNotification(c *gin.Context) {
     var newNotification models.Notification
     if err := c.BindJSON(&newNotification); err != nil {
+        log.Println("cannot bindJSON", err)
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
 
     err := nc.NotificationService.CreateNotification(c, &newNotification)
     if err != nil {
+        log.Println("unable to create notification:", err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }
@@ -58,6 +64,7 @@ func (nc *NotificationController) CreateNotification(c *gin.Context) {
 func (nc *NotificationController) UpdateNotification(c *gin.Context) {
     notificationID, err := strconv.Atoi(c.Param("notificationID"))
     if err != nil {
+        log.Println("invalid notification:", err)
         c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid notification ID"})
         return
     }
@@ -72,6 +79,7 @@ func (nc *NotificationController) UpdateNotification(c *gin.Context) {
 
     err = nc.NotificationService.UpdateNotification(c, &updatedNotification)
     if err != nil {
+        log.Println("unable to update notification", err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }
@@ -83,12 +91,14 @@ func (nc *NotificationController) UpdateNotification(c *gin.Context) {
 func (nc *NotificationController) DeleteNotification(c *gin.Context) {
     notificationID, err := strconv.Atoi(c.Param("notificationID"))
     if err != nil {
+        log.Println("invalid notification ID:", err)
         c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid notification ID"})
         return
     }
 
     err = nc.NotificationService.DeleteNotification(c, notificationID)
     if err != nil {
+        log.Println("unable to delete notification", err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }

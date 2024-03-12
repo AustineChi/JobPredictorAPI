@@ -3,6 +3,7 @@ package controllers
 import (
 	"JobPredictorAPI/models"
 	"JobPredictorAPI/services"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -22,11 +23,13 @@ func NewJobController(jobService *services.JobService) *JobController {
 func (jc *JobController) GetJob(c *gin.Context) {
 	jobID, err := strconv.Atoi(c.Param("jobID"))
 	if err != nil {
+		log.Println("unable to access JobID:", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "unable to get JobID", "details": err.Error()})
 		return
 	}
 	job, err := jc.JobService.GetJobByID(c, jobID)
 	if err != nil {
+		log.Println("unable to get jobID:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 	c.JSON(http.StatusOK, gin.H{"job": job})
@@ -37,10 +40,12 @@ func (jc *JobController) CreateJob(c *gin.Context) {
 
 	err := c.ShouldBindJSON(JobModel)
 	if err != nil {
+		log.Println("invalid request Payload:", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid Request Payload", "details": err.Error()})
 	}
 	newJob, err := jc.JobService.CreateJob(c, &JobModel)
 	if err != nil {
+		log.Println("unable to create Job:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to create"})
 		return
 	}
@@ -50,10 +55,12 @@ func (jc *JobController) CreateJob(c *gin.Context) {
 func (jc *JobController) UpdateJob(c *gin.Context) {
 	jobID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
+		log.Println("invalid user ID:", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
 	var updatedJob models.Job
 	if err := c.ShouldBindJSON(&updatedJob); err != nil {
+		log.Println("cannot Bind JSON", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -70,6 +77,7 @@ func (jc *JobController) UpdateJob(c *gin.Context) {
 func (jc *JobController) DeleteJob(c *gin.Context) {
 	jobID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
+		log.Println("invalid user ID:", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -77,6 +85,7 @@ func (jc *JobController) DeleteJob(c *gin.Context) {
 	currentJob.JobID = jobID
 	err = jc.JobService.DeleteJob(c, jobID)
 	if err != nil {
+		log.Println("unable to delete Job:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Job deleted Successfully"})
@@ -87,6 +96,7 @@ func (jc *JobController) DeleteJob(c *gin.Context) {
 func (jc *JobController) GetAllJobs(c *gin.Context) {
 	jobs, err := jc.JobService.GetAllJobs(c)
 	if err != nil {
+		log.Println("unable to get AllJobs:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -98,13 +108,15 @@ func (jc *JobController) GetAllJobs(c *gin.Context) {
 func (jc *JobController) GetJobRecommendations(c *gin.Context) {
 	userIDInt, err := strconv.Atoi(c.Param("userID"))
 	if err != nil {
+		log.Println("invalid user ID:", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
-    //convert back to string
-    userID := strconv.Itoa(userIDInt)
+	//convert back to string
+	userID := strconv.Itoa(userIDInt)
 	jobs, err := jc.JobService.GetJobRecommendations(c, userID)
 	if err != nil {
+		log.Println("unable to get jobrecommedation:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -116,12 +128,14 @@ func (jc *JobController) GetJobRecommendations(c *gin.Context) {
 func (jc *JobController) GetJobByID(c *gin.Context) {
 	jobID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
+		log.Println("invalid job ID:", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid job ID"})
 		return
 	}
 
 	job, err := jc.JobService.GetJobByID(c, jobID)
 	if err != nil {
+		log.Println("unable to get jobID:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

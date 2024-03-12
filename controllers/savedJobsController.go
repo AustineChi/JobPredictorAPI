@@ -3,6 +3,7 @@ package controllers
 import (
 	"JobPredictorAPI/models"
 	"JobPredictorAPI/services"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -40,6 +41,7 @@ func (sjc *SavedJobsController) SaveJob(c *gin.Context) {
 func (sjc *SavedJobsController) GetSavedJobs(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Param("userID"))
 	if err != nil {
+		log.Println("invalid user ID:", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
@@ -57,16 +59,19 @@ func (sjc *SavedJobsController) GetSavedJobs(c *gin.Context) {
 func (sjc *SavedJobsController) DeleteSavedJob(c *gin.Context) {
 	savedJobID, err := strconv.Atoi(c.Param("savedJobID"))
 	if err != nil {
+		log.Println("invalid user ID:", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid saved job ID"})
 		return
 	}
 	userID, err := strconv.Atoi(c.Param("userID"))
 	if err != nil {
+		log.Println("invalid user ID:", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID for saved Job instance"})
 	}
 
 	err = sjc.SavedJobsService.DeleteSavedJob(c, userID, savedJobID)
 	if err != nil {
+		log.Println("unable to delete saved job:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
