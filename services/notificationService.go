@@ -1,61 +1,67 @@
 package services
 
 import (
-    "context"
-    "database/sql"
-    "JobPredictorAPI/models"
+	"JobPredictorAPI/models"
+	"context"
+	"errors"
+
+	"gorm.io/gorm"
 )
 
 type NotificationService struct {
-    Db *sql.DB
+	Db *gorm.DB
 }
 
-func NewNotificationService(db *sql.DB) *NotificationService {
-    return &NotificationService{Db: db}
+func NewNotificationService(db *gorm.DB) *NotificationService {
+	return &NotificationService{Db: db}
 }
 
 // CreateNotification creates a new notification in the database
 func (s *NotificationService) CreateNotification(ctx context.Context, notification *models.Notification) error {
-    query := "INSERT INTO public.notification (user_id, message, date_sent) VALUES ($1, $2, $3)"
-    _, err := s.Db.ExecContext(ctx, query, notification.UserID, notification.Message, notification.DateSent)
-    return err
+	if err := s.Db.Create(notification).WithContext(ctx).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetNotificationsByUserID retrieves all notifications for a specific user
 func (s *NotificationService) GetNotificationsByUserID(ctx context.Context, userID int) ([]models.Notification, error) {
-    query := "SELECT notification_id, user_id, message, date_sent FROM public.notification WHERE user_id = $1"
-    rows, err := s.Db.QueryContext(ctx, query, userID)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	var notifications []models.Notification
 
-    var notifications []models.Notification
-    for rows.Next() {
-        var notification models.Notification
-        if err := rows.Scan(&notification.NotificationID, &notification.UserID, &notification.Message, &notification.DateSent); err != nil {
-            return nil, err
-        }
-        notifications = append(notifications, notification)
-    }
-
-    if err := rows.Err(); err != nil {
-        return nil, err
-    }
-
-    return notifications, nil
+	// Use GORM's Find method to fetch notifications for the given user
+	result := s.Db.Where("user_id = ?", userID).Find(&notifications)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return nil, errors.New("no rows affected")
+	}
+	return notifications, nil
 }
 
 // UpdateNotification updates a notification's details
 func (s *NotificationService) UpdateNotification(ctx context.Context, notification *models.Notification) error {
-    query := "UPDATE public.notification SET message = $1, date_sent = $2 WHERE notification_id = $3"
-    _, err := s.Db.ExecContext(ctx, query, notification.Message, notification.DateSent, notification.NotificationID)
-    return err
+	result := s.Db.Save(notification)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("no rows affected")
+	}
+	return nil
 }
 
 // DeleteNotification removes a notification from the database
 func (s *NotificationService) DeleteNotification(ctx context.Context, notificationID int) error {
-    query := "DELETE FROM public.notification WHERE notification_id = $1"
-    _, err := s.Db.ExecContext(ctx, query, notificationID)
-    return err
+	// Create a new Notification instance with the notificationID set
+	notification := models.Notification{NotificationID: notificationID}
+
+	result := s.Db.Delete(&notification)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("no rows affected")
+	}
+	return nil
 }

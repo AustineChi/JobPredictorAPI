@@ -1,15 +1,18 @@
 package config
 
 import (
-    "log"
-    "github.com/robfig/cron/v3"
-    "JobPredictorAPI/services" 
+	"JobPredictorAPI/services"
+	"log"
+
+	"github.com/gin-gonic/gin"
+	"github.com/robfig/cron/v3"
 )
 
 func SetupCron(jobService *services.JobService) {
+    var g *gin.Context
     c := cron.New()
     _, err := c.AddFunc("@daily", func() {
-        err := jobService.FetchAndStoreJobs()
+        err := jobService.FetchAndStoreJobs(g)
         if err != nil {
             log.Printf("Error fetching and storing jobs: %v", err)
         }

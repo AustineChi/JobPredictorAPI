@@ -1,50 +1,97 @@
 package services
 
 import (
-    "context"
-    "database/sql"
-    "JobPredictorAPI/models"
+	"JobPredictorAPI/models"
+	"context"
+	"errors"
+	"log"
+	"time"
+
+	"gorm.io/gorm"
 )
 
 type UserService struct {
-    Db *sql.DB
+	Db *gorm.DB
+	M  models.User
 }
 
-func NewUserService(db *sql.DB) *UserService {
-    return &UserService{Db: db}
+func NewUserService(db *gorm.DB) *UserService {
+	return &UserService{Db: db}
 }
 
 // CreateUser creates a new user in the database
-func (s *UserService) CreateUser(ctx context.Context, user *models.User) error {
-    query := "INSERT INTO public.user (name, email, password, job_preferences) VALUES ($1, $2, $3, $4)"
-    _, err := s.Db.ExecContext(ctx, query, user.Name, user.Email, user.Password, user.JobPreferences)
-    return err
+func (s *UserService) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
+	hashpassword, err := s.M.SetPassword(user.PasswordHash)
+	if err != nil {
+		return nil, err
+	}
+	newUser := &models.User{
+		Name:           user.Name,
+		Email:          user.Email,
+		PasswordHash:   string(hashpassword),
+		JobPreferences: user.JobPreferences,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+	}
+	err = s.Db.Create(newUser).WithContext(ctx).Error
+	if err != nil {
+		log.Println("Unable to create user", err)
+		return nil, err
+	}
+	return newUser, nil
+}
+
+func (s *UserService) GetEmail(ctx context.Context, email string) (*models.User, error) {
+	var user models.User
+	err := s.Db.Where("email=?", email).WithContext(ctx).First(&user).Error
+	if err != nil {
+		log.Println("unable to fetch email:", err)
+		return nil, err
+	}
+	return &user, nil
 }
 
 // GetUserByID retrieves a user by their ID
 func (s *UserService) GetUserByID(ctx context.Context, userID int) (*models.User, error) {
-    query := "SELECT user_id, name, email, job_preferences FROM public.user WHERE user_id = $1"
-    row := s.Db.QueryRowContext(ctx, query, userID)
+	query := "SELECT user_id, name, email, job_preferences FROM public.users WHERE user_id = $1"
+	row := s.Db.Exec(query, userID).WithContext(ctx)
 
-    var user models.User
-    err := row.Scan(&user.UserID, &user.Name, &user.Email, &user.JobPreferences)
-    if err != nil {
-        return nil, err
-    }
-
-    return &user, nil
+	var user models.User
+	result := row.Scan(&user).WithContext(ctx)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	// Check affected rows if needed
+	if result.RowsAffected == 0 {
+		return nil, errors.New("no rows affected")
+	}
+	return &user, nil
 }
 
 // UpdateUser updates a user's details in the database
 func (s *UserService) UpdateUser(ctx context.Context, user *models.User) error {
-    query := "UPDATE public.user SET name = $1, email = $2, job_preferences = $3 WHERE user_id = $4"
-    _, err := s.Db.ExecContext(ctx, query, user.Name, user.Email, user.JobPreferences, user.UserID)
-    return err
+	query := "UPDATE public.users SET name = $1, email = $2, job_preferences = $3 WHERE user_id = $4"
+	result := s.Db.Exec(query, user.Name, user.Email, user.JobPreferences, user.UserID).WithContext(ctx)
+	if result.Error != nil {
+		return result.Error
+	}
+	// Check affected rows if needed
+	if result.RowsAffected == 0 {
+		return errors.New("no rows affected")
+	}
+	return nil
 }
 
 // DeleteUser removes a user from the database
 func (s *UserService) DeleteUser(ctx context.Context, userID int) error {
-    query := "DELETE FROM public.user WHERE user_id = $1"
-    _, err := s.Db.ExecContext(ctx, query, userID)
-    return err
+	query := "DELETE FROM public.users WHERE user_id = $1"
+	result := s.Db.Exec(query, userID).WithContext(ctx)
+	if result.Error != nil {
+		return result.Error
+	}
+	// Check affected rows if needed
+	if result.RowsAffected == 0 {
+		return errors.New("no rows affected")
+	}
+	return nil
 }
