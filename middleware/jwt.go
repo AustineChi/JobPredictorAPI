@@ -16,7 +16,7 @@ type jwtCustomClaims struct {
 	jwt.StandardClaims
 }
 
-var SECRET_KEY = os.Getenv("SECRET")
+var SECRET_KEY = os.Getenv("SECRET_KEY")
 
 // Generate JWT token with the claims and signing method.
 func GenerateToken(userID int, email string, admin bool) (string, error) {

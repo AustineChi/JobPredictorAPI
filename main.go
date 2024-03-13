@@ -21,7 +21,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	dsnString := os.Getenv("DSN")
+	dsnString := os.Getenv("Local")
 	log.Println(dsnString)
 	// Open a DB connection
 	db, err := models.ConnectToDB(dsnString)

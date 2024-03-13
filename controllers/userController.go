@@ -55,7 +55,7 @@ func (uc *UserController) Login(c *gin.Context) {
 	err := c.ShouldBindJSON(&UserPayload)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request payload"})
-		log.Println("invalid request payload")
+		log.Println("invalid request payload", err)
 	}
 	user, err := uc.UserService.GetEmail(c, UserPayload.Email)
 	if err != nil {

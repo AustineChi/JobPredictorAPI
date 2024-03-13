@@ -21,7 +21,14 @@ func NewJobController(jobService *services.JobService) *JobController {
 }
 
 func (jc *JobController) GetJob(c *gin.Context) {
-	jobID, err := strconv.Atoi(c.Param("jobID"))
+	//get Job from URL parameters
+	idParam := c.Param("id")
+	if idParam == "" {
+		log.Println("job ID is empty")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Job ID param is empty"})
+		return
+	}
+	jobID, err := strconv.Atoi(idParam)
 	if err != nil {
 		log.Println("unable to access JobID:", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "unable to get JobID", "details": err.Error()})
@@ -38,7 +45,7 @@ func (jc *JobController) GetJob(c *gin.Context) {
 func (jc *JobController) CreateJob(c *gin.Context) {
 	var JobModel models.Job
 
-	err := c.ShouldBindJSON(JobModel)
+	err := c.ShouldBindJSON(&JobModel)
 	if err != nil {
 		log.Println("invalid request Payload:", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid Request Payload", "details": err.Error()})
@@ -65,13 +72,15 @@ func (jc *JobController) UpdateJob(c *gin.Context) {
 		return
 	}
 	updatedJob.JobID = jobID
-	err = jc.JobService.UpdateJob(c, &updatedJob)
+	updated, err := jc.JobService.UpdateJob(c, &updatedJob)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Job updated successfully"})
-
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Job updated successfully",
+		"details": updated,
+	})
 }
 
 func (jc *JobController) DeleteJob(c *gin.Context) {
@@ -100,8 +109,8 @@ func (jc *JobController) GetAllJobs(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
 	c.JSON(http.StatusOK, gin.H{"jobs": jobs})
+	log.Println("jobs gotten successfully")
 }
 
 // GetJobRecommendations - Retrieves job recommendations for a user
@@ -139,6 +148,19 @@ func (jc *JobController) GetJobByID(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
 	c.JSON(http.StatusOK, gin.H{"job": job})
+}
+
+// populate job to db
+func (jc *JobController) Seed(c *gin.Context) {
+	jobs, err := jc.JobService.Seed(c)
+	if err != nil {
+		log.Println("cannot get Api data", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "cannot get Api data",
+			"details": err.Error(),
+		})
+	}
+	c.JSON(http.StatusOK, gin.H{"jobs": jobs})
+	log.Println("jobs obtained")
 }

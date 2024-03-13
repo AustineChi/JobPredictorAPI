@@ -2,6 +2,7 @@ package router
 
 import (
 	"JobPredictorAPI/controllers"
+	"JobPredictorAPI/middleware"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -32,6 +33,11 @@ func SetupRouter(
 	router.GET("/user/:id", userController.GetUser)
 	router.PUT("/user/:id", userController.UpdateUser)
 
+    //populateDB
+    router.GET("/populate", jobController.Seed)
+
+    //authorization headers middleware 
+    router.Use(middleware.Auth())
 	// Job routes
 	router.GET("/jobs", jobController.GetAllJobs)
 	router.GET("/jobs/:id", jobController.GetJob)

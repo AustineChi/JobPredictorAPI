@@ -8,12 +8,13 @@ import (
 // Job represents a job listing in the job search app
 type Job struct {
 	JobID          int    `gorm:"column:job_id;primary_key" json:"jobId"`
-	Title          string `gorm:"column:title" json:"title"`
-	Description    string `gorm:"column:description" json:"description"`
-	Company        string `gorm:"column:company" json:"company"`
-	Location       string `gorm:"column:location" json:"location"`
+	Title          string `gorm:"column:title;size:255" json:"title"`
+	Description    string `gorm:"column:description;type:varchar(65535)" json:"description"`//varChar handles large amount of characters, compared to the normal char with a max of 255 characters
+	Company        string `gorm:"column:company;size:255" json:"company"`
+	Location       string `gorm:"column:location;size:255" json:"location"`
 	SkillsRequired string `gorm:"column:skills_required" json:"skillsRequired"`
-	Salary         BigInt `gorm:"column:salary" json:"salary"`
+	//Salary         BigInt `gorm:"column:salary" json:"salary"`
+	Salary         int64 `gorm:"column:salary" json:"salary"`
 	EmploymentType string `gorm:"column:employment_type" json:"employmentType"`
 }
 
