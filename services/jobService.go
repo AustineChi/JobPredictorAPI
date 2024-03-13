@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"net/http"
 
 	"gorm.io/gorm"
@@ -62,7 +63,8 @@ func (s *JobService) FetchAndStoreJobs(ctx context.Context) error {
 		}
 
 		// Insert the job into the database
-		if err := s.Db.Raw("INSERT INTO public.job (title, description, company, location) VALUES ($1, $2, $3, $4)", job.Title, job.Description, job.Company, job.Location).WithContext(ctx).Error; err != nil {
+		if err := s.Db.Raw("INSERT INTO public.jobs (title, description, company, location) VALUES ($1, $2, $3, $4)", job.Title, job.Description, job.Company, job.Location).WithContext(ctx).Error; err != nil {
+			log.Println("unable to insert jobs from api to db:", err)
 			return err
 			// Log or handle the error as needed
 		}
@@ -94,32 +96,35 @@ func (s *JobService) GetJobByID(ctx context.Context, jobID int) (*models.Job, er
 }
 
 // UpdateJob updates a given job's details
-func (s *JobService) UpdateJob(ctx context.Context, job *models.Job) error {
+func (s *JobService) UpdateJob(ctx context.Context, job *models.Job) (models.Job, error) {
 	// SQL query to update a job
-	query := "UPDATE public.job SET title = $1, description = $2, company = $3, location = $4 WHERE job_id = $5"
+	query := "UPDATE public.jobs SET title = $1, description = $2, company = $3, location = $4 WHERE job_id = $5"
 
+	// Execute the update query
 	result := s.Db.Exec(query, job.Title, job.Description, job.Company, job.Location, job.JobID).WithContext(ctx)
 	if result.Error != nil {
-		return result.Error
+		return models.Job{}, result.Error
 	}
-	// Check affected rows if needed
-	if result.RowsAffected == 0 {
-		return errors.New("no rows affected")
+
+	// Fetch the updated job
+	var updatedJob models.Job
+	if err := s.Db.First(&updatedJob, job.JobID).Error; err != nil {
+		return models.Job{}, err
 	}
-	return nil
+	return updatedJob, nil
 }
 
 func (s *JobService) CreateJob(ctx context.Context, job *models.Job) (models.Job, error) {
-	query := "INSERT INTO public.job (title, description, company, location, skills_required, salary, employment_type) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, description, company, location, skills_required, salary, employment_type"
+	query := "INSERT INTO public.jobs (title, description, company, location, skills_required, salary, employment_type) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING job_id, title, description, company, location, skills_required, salary, employment_type"
 
 	var createdJob models.Job
 	result := s.Db.Raw(query, job.Title, job.Description, job.Company, job.Location, job.SkillsRequired, job.Salary, job.EmploymentType).WithContext(ctx).Scan(&createdJob).WithContext(ctx)
 	if result.Error != nil {
 		return models.Job{}, result.Error
 	}
-	if result.RowsAffected == 0 {
-		return models.Job{}, errors.New("no rows affected")
-	}
+	// if result.RowsAffected == 0 {
+	// 	return models.Job{}, errors.New("no rows affected")
+	// }
 	return createdJob, nil
 }
 
@@ -134,12 +139,6 @@ func (s *JobService) DeleteJob(ctx context.Context, jobID int) error {
 		// Return any error that occurred during the delete operation
 		return result.Error
 	}
-
-	// Check if no rows were affected
-	if result.RowsAffected == 0 {
-		return errors.New("no rows affected")
-	}
-
 	// Return no error if delete was successful
 	return nil
 }
@@ -151,12 +150,9 @@ func (s *JobService) GetAllJobs(ctx context.Context) ([]models.Job, error) {
 
 	result := s.Db.Find(&jobs).WithContext(ctx)
 	if result.Error != nil {
+		log.Println("unable to get jobs from DB:", result.Error)
 		// Return any error that occurred during the query execution
 		return nil, result.Error
-	}
-	// Check if no rows were affected
-	if result.RowsAffected == 0 {
-		return nil, errors.New("no rows affected")
 	}
 	return jobs, nil
 }
@@ -193,4 +189,59 @@ func (s *JobService) GetJobRecommendations(ctx context.Context, jwtToken string)
 	}
 
 	return response.Recommendations, nil
+}
+
+// populate jobs in the Database
+func (s *JobService) Seed(ctx context.Context) ([]models.Job, error) {
+	url := "https://zobjobs.com/api/jobs"
+	respBody, err := utils.HttpGet(url)
+	if err != nil {
+		log.Println("unable to get URL:", err)
+		return nil, err
+	}
+
+	var apiResponse APIResponse
+	if err := json.Unmarshal(respBody, &apiResponse); err != nil {
+		log.Println("unable to unmarshal json :", err)
+		return nil, err
+	}
+	var insertedJobs []models.Job
+	// Insert up to 5 jobs each day
+	for i, jobApiResponse := range apiResponse.Jobs {
+		if i >= 5 {
+			break
+		}
+
+		job := models.Job{
+			Title:       jobApiResponse.Title,
+			Description: jobApiResponse.Description,
+			Company:     jobApiResponse.CompanyName,
+			Location:    jobApiResponse.Location,
+		}
+
+		//check if Job exists already
+		var count int64
+		if err := s.Db.Model(&models.Job{}).Where("title = ? AND description = ? AND company = ? AND location = ?",
+			job.Title, job.Description, job.Company, job.Location).Count(&count).WithContext(ctx).Error; err != nil {
+			log.Println("unable to check for existing job:", err)
+			return nil, err
+		}
+		//if Job doesnt exist insert
+		if count == 0 {
+			result := s.Db.Create(&job).WithContext(ctx)
+			if result.Error != nil {
+				log.Println("error creating job:", result.Error)
+				return nil, result.Error
+			}
+			log.Println("Db Populated with jobs ")
+			//get returned jobs from db
+			insertedJobs = append(insertedJobs, job)
+		} else {
+			log.Printf("Job already exists: %s, %s, %s, %s\n", job.Title, job.Description, job.Company, job.Location)
+			return nil, errors.New("job aleardy exist")
+		}
+
+	}
+	return insertedJobs, nil
+
 }
