@@ -4,6 +4,8 @@ import (
 	"JobPredictorAPI/models"
 	"context"
 	"errors"
+	"log"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -29,9 +31,13 @@ func (s *SavedJobsService) SaveJob(ctx context.Context, userID int, jobID int) e
 	if exists {
 		return errors.New("job already saved")
 	}
-
+	savedJobs := &models.SavedJob{
+		UserID:    userID,
+		JobID:     jobID,
+		DateSaved: time.Now(),
+	}
 	// SQL query to insert the job into the saved jobs table
-	result := s.db.Exec("INSERT INTO saved_jobs (user_id, job_id) VALUES (?, ?)", userID, jobID).WithContext(ctx)
+	result := s.db.Create(savedJobs).WithContext(ctx)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -45,6 +51,7 @@ func (s *SavedJobsService) GetSavedJobs(ctx context.Context, userID int) ([]mode
 
 	result := s.db.Raw("SELECT job_id FROM saved_jobs WHERE user_id = ?", userID).WithContext(ctx).Scan(&jobIDs)
 	if result.Error != nil {
+        log.Println("unable to select job_id :", result.Error)
 		return nil, result.Error
 	}
 	//slice to hold the jobs
@@ -53,6 +60,7 @@ func (s *SavedJobsService) GetSavedJobs(ctx context.Context, userID int) ([]mode
 	for _, jobID := range jobIDs {
 		job, err := s.jb.GetJobByID(ctx, jobID)
 		if err != nil {
+            log.Println("unable to get jobID from job's DB:", err)
 			return nil, err
 		}
 		jobs = append(jobs, *job)
@@ -67,34 +75,30 @@ func (s *SavedJobsService) UpdateSavedJob(ctx context.Context, userID int, jobID
 	if result.Error != nil {
 		return result.Error
 	}
-	if result.RowsAffected == 0 {
-		return errors.New("no rows affetced by query")
-	}
 	return nil
 }
 
 // DeleteSavedJob removes a saved job from a user's list
-func (s *SavedJobsService) DeleteSavedJob(ctx context.Context, userID int, jobID int) error {
-	// Logic to delete a saved job
-	result := s.db.Raw("DELETE FROM saved_jobs WHERE user_id = ? AND job_id = ?", userID, jobID).WithContext(ctx)
+func (s *SavedJobsService) DeleteSavedJob(ctx context.Context, userID int) error {
+	// Logic to delete all saved jobs for a user
+	result := s.db.Where("user_id = ?", userID).Delete(&models.SavedJob{}).WithContext(ctx)
 	if result.Error != nil {
 		return result.Error
 	}
-	if result.RowsAffected == 0 {
-		return errors.New("no rows affetced by query")
-	}
 	return nil
 }
-
 // isJobSaved checks if a job is already saved by a user
 func (s *SavedJobsService) isJobSaved(ctx context.Context, userID int, jobID int) (bool, error) {
 	var exists bool
-	result := s.db.Exec("SELECT EXISTS(SELECT 1 FROM saved_jobs WHERE user_id = ? AND job_id = ?)", userID, jobID).WithContext(ctx).Scan(&exists)
-	if result.Error != nil {
-		return exists, result.Error
-	}
-	if result.RowsAffected == 0 {
-		return exists, errors.New("no rows affetced by query")
+
+	// SQL query to check if the job is already saved
+	query := "SELECT EXISTS(SELECT 1 FROM saved_jobs WHERE user_id = ? AND job_id = ?)"
+	//log.Println("Executing SQL Query:", query, "with userID:", userID, "and jobID:", jobID)
+
+	result := s.db.Raw(query, userID, jobID).WithContext(ctx).Row()
+	if err := result.Scan(&exists); err != nil {
+		log.Println("Error scanning result:", err)
+		return exists, err
 	}
 	return exists, nil
 }

@@ -81,13 +81,17 @@ func (s *JobService) GetJobByID(ctx context.Context, jobID int) (*models.Job, er
 	var job models.Job
 
 	// Execute the query to find the job by ID
-	result := s.Db.Model(&models.Job{}).Select("job_id, title, description, company, location").Where("job_id = $1", jobID).WithContext(ctx).First(&job)
+	result := s.Db.Model(&models.Job{}).Select("job_id, title, description, company, location").
+	Where("job_id = $1", jobID).WithContext(ctx).First(&job)
+	
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			// If no rows were returned, return a nil job and no error
-			return nil, nil
+			log.Printf("job with ID %d not found", jobID)
+			return nil, result.Error
 		}
 		// Return any other error that occurred during the query execution
+		log.Printf("unable to get job with ID %d: %v", jobID, result.Error)
 		return nil, result.Error
 	}
 

@@ -36,7 +36,7 @@ func SetupRouter(
     //populateDB
     router.GET("/populate", jobController.Seed)
 
-    //authorization headers middleware 
+    //authorization headers middleware, for authenticated users 
     router.Use(middleware.Auth())
 	// Job routes
 	router.GET("/jobs", jobController.GetAllJobs)
@@ -48,7 +48,7 @@ func SetupRouter(
 	// Saved Jobs routes
 	router.POST("/save-job", savedJobsController.SaveJob)
 	router.GET("/saved-jobs/:userID", savedJobsController.GetSavedJobs)
-	router.DELETE("/saved-job/:savedJobID", savedJobsController.DeleteSavedJob)
+	router.DELETE("/saved-job/:userID", savedJobsController.DeleteSavedJob)
 
 	// Recommendation routes (if any specific routes are needed)
 	router.GET("/recommendations/:userID", jobController.GetJobRecommendations)

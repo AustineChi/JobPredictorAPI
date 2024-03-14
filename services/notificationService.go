@@ -17,11 +17,11 @@ func NewNotificationService(db *gorm.DB) *NotificationService {
 }
 
 // CreateNotification creates a new notification in the database
-func (s *NotificationService) CreateNotification(ctx context.Context, notification *models.Notification) error {
+func (s *NotificationService) CreateNotification(ctx context.Context, notification *models.Notification) (models.Notification, error) {
 	if err := s.Db.Create(notification).WithContext(ctx).Error; err != nil {
-		return err
+		return models.Notification{}, err
 	}
-	return nil
+	return *notification, nil
 }
 
 // GetNotificationsByUserID retrieves all notifications for a specific user

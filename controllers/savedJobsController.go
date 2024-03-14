@@ -24,16 +24,19 @@ func NewSavedJobsController(sjs *services.SavedJobsService) *SavedJobsController
 func (sjc *SavedJobsController) SaveJob(c *gin.Context) {
 	var savedJob models.SavedJob
 	if err := c.BindJSON(&savedJob); err != nil {
+		log.Println("unable to bind JSON:", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	err := sjc.SavedJobsService.SaveJob(c, savedJob.UserID, savedJob.JobID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Println("unable to save job:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "unable to save job",
+			"details": err.Error()})
 		return
 	}
-
 	c.JSON(http.StatusCreated, gin.H{"message": "Job saved successfully"})
 }
 
@@ -48,7 +51,10 @@ func (sjc *SavedJobsController) GetSavedJobs(c *gin.Context) {
 
 	savedJobs, err := sjc.SavedJobsService.GetSavedJobs(c, userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"details": err.Error(),
+			"error":   "unable to get saved jobs",
+		})
 		return
 	}
 
@@ -57,24 +63,25 @@ func (sjc *SavedJobsController) GetSavedJobs(c *gin.Context) {
 
 // DeleteSavedJob - Removes a saved job for a user
 func (sjc *SavedJobsController) DeleteSavedJob(c *gin.Context) {
-	savedJobID, err := strconv.Atoi(c.Param("savedJobID"))
-	if err != nil {
-		log.Println("invalid user ID:", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid saved job ID"})
-		return
-	}
+	// savedJobID, err := strconv.Atoi(c.Param("savedJobID"))
+	// if err != nil {
+	// 	log.Println("invalid user ID:", err)
+	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid saved job ID"})
+	// 	return
+	// }
 	userID, err := strconv.Atoi(c.Param("userID"))
 	if err != nil {
 		log.Println("invalid user ID:", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID for saved Job instance"})
 	}
 
-	err = sjc.SavedJobsService.DeleteSavedJob(c, userID, savedJobID)
+	err = sjc.SavedJobsService.DeleteSavedJob(c, userID)
 	if err != nil {
 		log.Println("unable to delete saved job:", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "unable to delete saved job",
+			"details": err.Error()})
 		return
 	}
-
 	c.JSON(http.StatusOK, gin.H{"message": "Job deleted successfully"})
 }

@@ -50,14 +50,17 @@ func (nc *NotificationController) CreateNotification(c *gin.Context) {
         return
     }
 
-    err := nc.NotificationService.CreateNotification(c, &newNotification)
+   notify,  err := nc.NotificationService.CreateNotification(c, &newNotification)
     if err != nil {
         log.Println("unable to create notification:", err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }
 
-    c.JSON(http.StatusCreated, gin.H{"message": "Notification created successfully"})
+    c.JSON(http.StatusCreated, gin.H{
+        "message": "Notification created successfully",
+        "details":notify,
+    })
 }
 
 // UpdateNotification - Updates a notification's details
