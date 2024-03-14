@@ -82,8 +82,8 @@ func (s *JobService) GetJobByID(ctx context.Context, jobID int) (*models.Job, er
 
 	// Execute the query to find the job by ID
 	result := s.Db.Model(&models.Job{}).Select("job_id, title, description, company, location").
-	Where("job_id = $1", jobID).WithContext(ctx).First(&job)
-	
+		Where("job_id = $1", jobID).WithContext(ctx).First(&job)
+
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			// If no rows were returned, return a nil job and no error
@@ -167,6 +167,7 @@ func (s *JobService) GetJobRecommendations(ctx context.Context, jwtToken string)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
+		log.Println("unable to perform request:", err)
 		return nil, err
 	}
 
@@ -175,6 +176,7 @@ func (s *JobService) GetJobRecommendations(ctx context.Context, jwtToken string)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
+		log.Println("unable to handle client request:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -185,10 +187,12 @@ func (s *JobService) GetJobRecommendations(ctx context.Context, jwtToken string)
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		log.Println("response body not read:", err)
 		return nil, err
 	}
 
 	if err := json.Unmarshal(body, &response); err != nil {
+		log.Println("unable to marshal response to JSON:", err)
 		return nil, err
 	}
 

@@ -19,7 +19,7 @@ func SetupRouter(
 
 	router := gin.Default()
 
-    //Allow cross-origin requests
+	//Allow cross-origin requests
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"https//*", "http://*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
@@ -27,17 +27,20 @@ func SetupRouter(
 		ExposeHeaders:    []string{"Link"},
 		AllowCredentials: true,
 	}))
+	//populateDB
+	router.GET("/populate", jobController.Seed)
+
 	// User routes
 	router.POST("/register", userController.Register)
 	router.POST("/login", userController.Login)
+
+	//authorization headers middleware, for authenticated users
+	router.Use(middleware.Auth())
+
+	//user routes
 	router.GET("/user/:id", userController.GetUser)
 	router.PUT("/user/:id", userController.UpdateUser)
 
-    //populateDB
-    router.GET("/populate", jobController.Seed)
-
-    //authorization headers middleware, for authenticated users 
-    router.Use(middleware.Auth())
 	// Job routes
 	router.GET("/jobs", jobController.GetAllJobs)
 	router.GET("/jobs/:id", jobController.GetJob)
@@ -54,8 +57,8 @@ func SetupRouter(
 	router.GET("/recommendations/:userID", jobController.GetJobRecommendations)
 
 	// Notification routes
-	router.GET("/notifications/:userID", notificationController.GetNotifications)
 	router.POST("/notifications", notificationController.CreateNotification)
+	router.GET("/notifications/:userID", notificationController.GetNotifications)
 	router.PUT("/notifications/:notificationID", notificationController.UpdateNotification)
 	router.DELETE("/notifications/:notificationID", notificationController.DeleteNotification)
 

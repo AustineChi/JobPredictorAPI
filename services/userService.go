@@ -53,17 +53,15 @@ func (s *UserService) GetEmail(ctx context.Context, email string) (*models.User,
 
 // GetUserByID retrieves a user by their ID
 func (s *UserService) GetUserByID(ctx context.Context, userID int) (*models.User, error) {
-	query := "SELECT user_id, name, email, job_preferences FROM public.users WHERE user_id = $1"
-	row := s.Db.Exec(query, userID).WithContext(ctx)
 
 	var user models.User
-	result := row.Scan(&user).WithContext(ctx)
+	result := s.Db.Model(&models.User{}).Select(" user_id, name, email, job_preferences, created_at, updated_at").
+		Where("user_id = $1", userID).WithContext(ctx).First(&user)
 	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, result.Error
+		}
 		return nil, result.Error
-	}
-	// Check affected rows if needed
-	if result.RowsAffected == 0 {
-		return nil, errors.New("no rows affected")
 	}
 	return &user, nil
 }
@@ -75,10 +73,6 @@ func (s *UserService) UpdateUser(ctx context.Context, user *models.User) error {
 	if result.Error != nil {
 		return result.Error
 	}
-	// Check affected rows if needed
-	if result.RowsAffected == 0 {
-		return errors.New("no rows affected")
-	}
 	return nil
 }
 
@@ -88,10 +82,6 @@ func (s *UserService) DeleteUser(ctx context.Context, userID int) error {
 	result := s.Db.Exec(query, userID).WithContext(ctx)
 	if result.Error != nil {
 		return result.Error
-	}
-	// Check affected rows if needed
-	if result.RowsAffected == 0 {
-		return errors.New("no rows affected")
 	}
 	return nil
 }
