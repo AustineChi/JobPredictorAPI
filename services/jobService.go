@@ -77,11 +77,16 @@ func (s *JobService) FetchAndStoreJobs(ctx context.Context) error {
 
 // GetJobByID fetches a single job by its ID
 func (s *JobService) GetJobByID(ctx context.Context, jobID int) (*models.Job, error) {
+	if s.Db == nil {
+		log.Println("s.db is nil")
+        return nil, errors.New("s.Db is nil")
+    }
+
 	// Create a Job instance to hold the data
 	var job models.Job
 
 	// Execute the query to find the job by ID
-	result := s.Db.Model(&models.Job{}).Select("job_id, title, description, company, location").
+	result := s.Db.Model(models.Job{}).Select("job_id, title, description, company, location").
 		Where("job_id = $1", jobID).WithContext(ctx).First(&job)
 
 	if result.Error != nil {

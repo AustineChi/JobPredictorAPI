@@ -12,12 +12,12 @@ import (
 
 type SavedJobsService struct {
 	db *gorm.DB
-	jb JobService
+	jb *JobService
 }
 
 // NewSavedJobsService creates a new instance of SavedJobsService
-func NewSavedJobsService(db *gorm.DB) *SavedJobsService {
-	return &SavedJobsService{db: db}
+func NewSavedJobsService(db *gorm.DB, jb* JobService) *SavedJobsService {
+	return &SavedJobsService{db: db, jb: jb}
 }
 
 // SaveJob saves a job to a user's saved jobs

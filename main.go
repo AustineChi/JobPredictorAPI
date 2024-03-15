@@ -31,7 +31,7 @@ func main() {
 	// Initialize services
 	jobService := services.NewJobService(db)
 	userService := services.NewUserService(db)
-	savedJobsService := services.NewSavedJobsService(db)
+	savedJobsService := services.NewSavedJobsService(db, jobService)
 	notificationService := services.NewNotificationService(db)
 	interactionService := services.NewInteractionService(db)
 
