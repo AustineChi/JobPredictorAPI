@@ -12,7 +12,7 @@ import (
 
 type SavedJobsService struct {
 	db *gorm.DB
-	jb *JobService
+	jb *JobService //initialize jobservice connetion pool for swapping contents to the savedJob service
 }
 
 // NewSavedJobsService creates a new instance of SavedJobsService
