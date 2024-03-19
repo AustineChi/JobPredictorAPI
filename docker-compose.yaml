@@ -1,17 +1,31 @@
-version: '3'
+version: "3"
 
 services:
-  jobbackend-service:
-    build:
-      context: .
-      dockerfile: ./job.dockerfile
-    restart: always
-    ports: 
-      - "80:8080"
-    deploy:
-      mode: replicated
-      replicas: 1
-    environment:
-      DSN: postgres://postgres_1_yvg0_user:LOgPvWQEEDLpDbx2HbKIsHPMbjE7BBjY@dpg-cnk40n821fec73e77ing-a.oregon-postgres.render.com/postgres_1_yvg0
-      Local: postgresql://postgres:philippians@localhost:5432/postgres?sslmode=disable
-      SECRET_KEY: HMACSHA1
+    jobbackend-service:
+        build:
+            context: .
+            dockerfile: ./job.dockerfile
+        restart: always
+        ports:
+            - "80:8080"
+        deploy:
+            mode: replicated
+            replicas: 1
+        environment:
+            DSN: postgres://postgres_1_yvg0_user:LOgPvWQEEDLpDbx2HbKIsHPMbjE7BBjY@postgres:5432/postgres_1_yvg0
+            Local: postgresql://postgres:philippians@host.docker.internal:5432/postgres?sslmode=disable #connecting to the docker host instance
+            SECRET_KEY: HMACSHA1
+
+    postgres:
+        image: postgres:15-alpine
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: philippians
+            POSTGRES_DB: postgres
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+
+volumes:
+    postgres_data:
