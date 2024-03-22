@@ -85,3 +85,18 @@ func (s *UserService) DeleteUser(ctx context.Context, userID int) error {
 	}
 	return nil
 }
+
+func (s *UserService) GetUserByIdAndJobPreference(ctx context.Context, userID int) (int, string, error) {
+	var user models.User
+	result := s.Db.Model(&models.User{}).Select("user_id, job_preferences").
+		Where("user_id = ?", userID).
+		WithContext(ctx).
+		First(&user)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return 0, "", result.Error
+		}
+		return 0, "", result.Error
+	}
+	return user.UserID, user.JobPreferences, nil
+}

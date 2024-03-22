@@ -12,11 +12,13 @@ import (
 
 type JobController struct {
 	JobService *services.JobService
+	UserService *services.UserService
 }
 
-func NewJobController(jobService *services.JobService) *JobController {
+func NewJobController(jobService *services.JobService, userService *services.UserService) *JobController {
 	return &JobController{
 		JobService: jobService,
+		UserService: userService,
 	}
 }
 
@@ -121,9 +123,14 @@ func (jc *JobController) GetJobRecommendations(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
+	id, preference, err := jc.UserService.GetUserByIdAndJobPreference(c,userIDInt)
+	if err !=nil {
+		log.Println("unable to get ID and prefrence:",err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error":err.Error()})
+	}
 	//convert back to string
-	userID := strconv.Itoa(userIDInt)
-	jobs, err := jc.JobService.GetJobRecommendations(c, userID)
+	userID := strconv.Itoa(id)
+	jobs, err := jc.JobService.GetJobRecommendations(c, userID, preference)
 	if err != nil {
 		log.Println("unable to get jobrecommedation:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

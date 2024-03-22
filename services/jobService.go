@@ -6,9 +6,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 
 	"gorm.io/gorm"
 )
@@ -79,8 +81,8 @@ func (s *JobService) FetchAndStoreJobs(ctx context.Context) error {
 func (s *JobService) GetJobByID(ctx context.Context, jobID int) (*models.Job, error) {
 	if s.Db == nil {
 		log.Println("s.db is nil")
-        return nil, errors.New("s.Db is nil")
-    }
+		return nil, errors.New("s.Db is nil")
+	}
 
 	// Create a Job instance to hold the data
 	var job models.Job
@@ -167,9 +169,10 @@ func (s *JobService) GetAllJobs(ctx context.Context) ([]models.Job, error) {
 }
 
 // GetJobRecommendations retrieves job recommendations from the Flask app.
-func (s *JobService) GetJobRecommendations(ctx context.Context, jwtToken string) ([]models.Job, error) {
-	url := "http://127.0.0.1:5000/recommendations/recommend"
-
+func (s *JobService) GetJobRecommendations(ctx context.Context, jwtToken string, urlParam string) ([]models.Job, error) {
+	//url := "http://127.0.0.1:5000/recommendations/recommend"
+	UrlParam := url.QueryEscape(urlParam)
+	url := fmt.Sprintf("http://127.0.0.1:5000/recommendations/recommend?job_title=%s", UrlParam)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Println("unable to perform request:", err)
@@ -200,6 +203,7 @@ func (s *JobService) GetJobRecommendations(ctx context.Context, jwtToken string)
 		log.Println("unable to marshal response to JSON:", err)
 		return nil, err
 	}
+	log.Println("response generated from flask App")
 
 	return response.Recommendations, nil
 }

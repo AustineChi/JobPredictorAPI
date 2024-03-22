@@ -6,7 +6,7 @@ import (
 	"JobPredictorAPI/router"
 	"JobPredictorAPI/services"
 	"log"
-	"os"
+
 	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
@@ -19,7 +19,7 @@ func main() {
 	// if err != nil {
 	// 	log.Fatal("Error loading .env file")
 	// }
-	dsnString := os.Getenv("Local")
+	dsnString := "postgresql://postgres:philippians@localhost:5432/postgres?sslmode=disable"
 	log.Println(dsnString)
 	// Open a DB connection
 	db, err := models.ConnectToDB(dsnString)
@@ -35,7 +35,7 @@ func main() {
 
 	// Initialize controllers
 	userCtrl := controllers.NewUserController(userService)
-	jobCtrl := controllers.NewJobController(jobService)
+	jobCtrl := controllers.NewJobController(jobService, userService)
 	savedJobsCtrl := controllers.NewSavedJobsController(savedJobsService)
 	notificationCtrl := controllers.NewNotificationController(notificationService)
 	interactionCtrl := controllers.NewInteractionController(interactionService)
