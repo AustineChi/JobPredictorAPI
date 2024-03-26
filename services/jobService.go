@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -169,9 +170,11 @@ func (s *JobService) GetAllJobs(ctx context.Context) ([]models.Job, error) {
 }
 
 // GetJobRecommendations retrieves job recommendations from the Flask app.
-func (s *JobService) GetJobRecommendations(ctx context.Context, jwtToken string, urlParam string) ([]models.Job, error) {
+func (s *JobService) GetJobRecommendations(ctx context.Context, jwtToken string, urlParam []string) ([]models.Job, error) {
+	// Convert urlParam to a comma-separated string
+	urlParamStr := strings.Join(urlParam, ",")
 	//url := "http://127.0.0.1:5000/recommendations/recommend"
-	UrlParam := url.QueryEscape(urlParam)
+	UrlParam := url.QueryEscape(urlParamStr)
 	url := fmt.Sprintf("http://127.0.0.1:5000/recommendations/recommend?job_title=%s", UrlParam)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

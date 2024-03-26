@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -87,10 +86,10 @@ func (uc *UserController) Login(c *gin.Context) {
 		return
 	}
 	log.Println("Token generated:", token)
-	c.JSON(http.StatusOK, gin.H{"token": token})
-	session := sessions.Default(c)
-	session.Set("userID", user.UserID)
-	session.Save()
+	 c.JSON(http.StatusOK, gin.H{"token": token})
+	// session := sessions.Default(c)
+	// session.Set("userID", user.UserID)
+	// session.Save()
 
 	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 	log.Println("login successful")
